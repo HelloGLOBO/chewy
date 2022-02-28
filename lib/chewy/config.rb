@@ -64,12 +64,20 @@ module Chewy
     end
 
     def transport_logger=(logger)
-      Chewy.client.transport.logger = logger
+      if BackendLibrary.library == :opensearch
+        Chewy.client.transport.transport.logger = logger
+      else
+        Chewy.client.transport.logger = logger
+      end
       @transport_logger = logger
     end
 
     def transport_tracer=(tracer)
-      Chewy.client.transport.tracer = tracer
+      if BackendLibrary.library == :opensearch
+        Chewy.client.transport.transport.tracer = tracer
+      else
+        Chewy.client.transport.tracer = tracer
+      end
       @transport_tracer = tracer
     end
 

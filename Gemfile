@@ -20,3 +20,7 @@ gem 'yard'
 
 gem 'rexml' if RUBY_VERSION >= '3.0.0'
 gem 'ruby2_keywords' if RUBY_VERSION < '2.7'
+
+# FIXME find a way to truly load one if the desired backend node is up
+gem 'chewy_opensearch', path: '/Users/darrylalmonte/Desktop/Code/GLOBO/chewy_opensearch'
+# gem 'chewy_elasticsearch', path: '/Users/darrylalmonte/Desktop/Code/GLOBO/chewy_elasticsearch'

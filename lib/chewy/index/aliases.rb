@@ -22,7 +22,7 @@ module Chewy
 
         def empty_if_not_found
           yield
-        rescue Elasticsearch::Transport::Transport::Errors::NotFound
+        rescue BackendLibrary.transport_error_not_found
           []
         end
       end

@@ -72,7 +72,17 @@ module Chewy
         #   # or
         #   UsersIndex.import users.map(&:id) # user ids will be deleted from index
         #
-        ruby2_keywords def import(*args, &block)
+        # FIXME ruby2_keywords issue
+        # ruby2_keywords def import(*args, &block)
+        #   collection, options = import_args(*args)
+        #
+        #   if !collection.is_a?(relation_class) || options[:direct_import]
+        #     import_objects(collection, options, &block)
+        #   else
+        #     import_scope(collection, options, &block)
+        #   end
+        # end
+        def import(*args, &block)
           collection, options = import_args(*args)
 
           if !collection.is_a?(relation_class) || options[:direct_import]
@@ -82,7 +92,20 @@ module Chewy
           end
         end
 
-        ruby2_keywords def import_fields(*args, &block)
+        # FIXME ruby2_keywords issue
+        # ruby2_keywords def import_fields(*args, &block)
+        #   return enum_for(:import_fields, *args) unless block_given?
+        #
+        #   collection, options = import_args(*args)
+        #
+        #   if options[:fields].present? || collection.is_a?(relation_class)
+        #     collection = all_scope_where_ids_in(identify(collection)) unless collection.is_a?(relation_class)
+        #     pluck_in_batches(collection, **options.slice(:fields, :batch_size, :typecast), &block)
+        #   else
+        #     identify(collection).each_slice(options[:batch_size], &block)
+        #   end
+        # end
+        def import_fields(*args, &block)
           return enum_for(:import_fields, *args) unless block_given?
 
           collection, options = import_args(*args)

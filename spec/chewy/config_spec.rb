@@ -21,8 +21,13 @@ describe Chewy::Config do
     after { subject.transport_logger = nil }
 
     specify do
-      expect { subject.transport_logger = logger }
-        .to change { Chewy.client.transport.logger }.to(logger)
+	    if BackendLibrary.library == :opensearch
+        expect { subject.transport_logger = logger }
+          .to change { Chewy.client.transport.transport.logger }.to(logger)
+	    else
+        expect { subject.transport_logger = logger }
+          .to change { Chewy.client.transport.logger }.to(logger)
+	    end
     end
     specify do
       expect { subject.transport_logger = logger }
@@ -39,8 +44,13 @@ describe Chewy::Config do
     after { subject.transport_tracer = nil }
 
     specify do
-      expect { subject.transport_tracer = tracer }
-        .to change { Chewy.client.transport.tracer }.to(tracer)
+      if BackendLibrary.library == :opensearch
+        expect { subject.transport_tracer = tracer }
+          .to change { Chewy.client.transport.transport.tracer }.to(tracer)
+      else
+        expect { subject.transport_tracer = tracer }
+          .to change { Chewy.client.transport.tracer }.to(tracer)
+      end
     end
     specify do
       expect { subject.transport_tracer = tracer }

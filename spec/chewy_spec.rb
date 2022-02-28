@@ -54,12 +54,15 @@ describe Chewy do
     let(:faraday_block) { proc {} }
     let(:mock_client) { double(:client) }
     let(:expected_client_config) { {transport_options: {}} }
+    # FIXME, need to solve this as part of SSL fix
+    let(:expected_client_config_open_search) { { host: "https://admin:admin@localhost:9200", transport_options: { ssl: { verify_mode: 0} } } }
 
     before do
       Chewy.current[:chewy_client] = nil
-      allow(Chewy).to receive_messages(configuration: {transport_options: {proc: faraday_block}})
+      allow(Chewy).to receive_messages(configuration: { transport_options: {proc: faraday_block} })
 
-      allow(::Elasticsearch::Client).to receive(:new).with(expected_client_config) do |*_args, &passed_block|
+      usable_config = (BackendLibrary.library == :opensearch ? expected_client_config_open_search : expected_client_config)
+      allow(::BackendLibrary.client_class).to receive(:new).with(usable_config) do |*_args, &passed_block|
         # RSpec's `with(..., &block)` was used previously, but doesn't actually do
         # any verification of the passed block (even of its presence).
         expect(passed_block.source_location).to eq(faraday_block.source_location)
@@ -108,7 +111,7 @@ describe Chewy do
       expect(CitiesIndex.exists?).to eq true
       expect(PlacesIndex.exists?).to eq true
 
-      expect { Chewy.create_indices! }.to raise_error(Elasticsearch::Transport::Transport::Errors::BadRequest)
+      expect { Chewy.create_indices! }.to raise_error(BackendLibrary.transport_error_bad_request)
     end
   end
 end

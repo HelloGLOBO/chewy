@@ -56,7 +56,15 @@ module Chewy
       #
       # @example
       #   PlacesIndex.query(match: {name: 'Moscow'})
-      ruby2_keywords def method_missing(name, *args, &block)
+      # FIXME ruby2_keywords issue
+      # ruby2_keywords def method_missing(name, *args, &block)
+      #   if search_class::DELEGATED_METHODS.include?(name)
+      #     all.send(name, *args, &block)
+      #   else
+      #     super
+      #   end
+      # end
+      def method_missing(name, *args, &block)
         if search_class::DELEGATED_METHODS.include?(name)
           all.send(name, *args, &block)
         else

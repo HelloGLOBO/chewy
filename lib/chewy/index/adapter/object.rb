@@ -85,7 +85,12 @@ module Chewy
         # @param args [Array<#to_json>]
         # @option options [Integer] :batch_size import processing batch size
         # @return [true, false]
-        ruby2_keywords def import(*args, &block)
+        # FIXME ruby2_keywords issue
+        # ruby2_keywords def import(*args, &block)
+        #   collection, options = import_args(*args)
+        #   import_objects(collection, options, &block)
+        # end
+        def import(*args, &block)
           collection, options = import_args(*args)
           import_objects(collection, options, &block)
         end
@@ -113,7 +118,30 @@ module Chewy
         #   end
         #
         # @see Chewy::Index::Adapter::Base#import_fields
-        ruby2_keywords def import_fields(*args, &block)
+        # FIXME ruby2_keywords issue
+        # ruby2_keywords def import_fields(*args, &block)
+        #   return enum_for(:import_fields, *args) unless block_given?
+        #
+        #   options = args.extract_options!
+        #   options[:batch_size] ||= BATCH_SIZE
+        #
+        #   if args.empty? && @target.respond_to?(pluck_method)
+        #     @target.send(pluck_method, :id, *options[:fields]).each_slice(options[:batch_size], &block)
+        #   elsif options[:fields].blank?
+        #     import_references(*args, options) do |batch|
+        #       yield batch.map { |object| object_field(object, :id) || object }
+        #     end
+        #   else
+        #     import_references(*args, options) do |batch|
+        #       batch = batch.map do |object|
+        #         options[:fields].map { |field| object_field(object, field) }
+        #           .unshift(object_field(object, :id) || object)
+        #       end
+        #       yield batch
+        #     end
+        #   end
+        # end
+        def import_fields(*args, &block)
           return enum_for(:import_fields, *args) unless block_given?
 
           options = args.extract_options!
@@ -129,7 +157,7 @@ module Chewy
             import_references(*args, options) do |batch|
               batch = batch.map do |object|
                 options[:fields].map { |field| object_field(object, field) }
-                  .unshift(object_field(object, :id) || object)
+                                .unshift(object_field(object, :id) || object)
               end
               yield batch
             end
@@ -139,7 +167,14 @@ module Chewy
         # For the Object adapter returns the objects themselves in batches.
         #
         # @see Chewy::Index::Adapter::Base#import_references
-        ruby2_keywords def import_references(*args, &block)
+        # FIXME ruby2_keywords issue
+        # ruby2_keywords def import_references(*args, &block)
+        #   return enum_for(:import_references, *args) unless block_given?
+        #
+        #   collection, options = import_args(*args)
+        #   collection.each_slice(options[:batch_size], &block)
+        # end
+        def import_references(*args, &block)
           return enum_for(:import_references, *args) unless block_given?
 
           collection, options = import_args(*args)

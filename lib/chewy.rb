@@ -19,8 +19,6 @@ require 'active_support/core_ext/string/inflections'
 require 'singleton'
 require 'base64'
 
-require 'elasticsearch'
-
 def try_require(path)
   require path
 rescue LoadError
@@ -34,6 +32,10 @@ try_require 'parallel'
 ActiveSupport.on_load(:active_record) do
   try_require 'kaminari/activerecord'
 end
+
+# FIXME find a way to truly load one if the desired backend node is up
+try_require 'chewy_opensearch'
+try_require 'chewy_elasticsearch'
 
 require 'chewy/version'
 require 'chewy/errors'
@@ -93,14 +95,14 @@ module Chewy
       raise Chewy::UndefinedIndex, "Can not find index named `#{class_name}`"
     end
 
-    # Main elasticsearch-ruby client instance
-    #
+    # Main search node client instance based on backend lib
     def client
       Chewy.current[:chewy_client] ||= begin
         client_configuration = configuration.deep_dup
         client_configuration.delete(:prefix) # used by Chewy, not relevant to Elasticsearch::Client
         block = client_configuration[:transport_options].try(:delete, :proc)
-        ::Elasticsearch::Client.new(client_configuration, &block)
+
+        ::BackendLibrary.client(client_configuration, &block)
       end
     end
 
@@ -110,8 +112,13 @@ module Chewy
     # Does nothing in case of config `wait_for_status` is undefined.
     #
     def wait_for_status
+      # FIXME This is due to the SSL situation
       if Chewy.configuration[:wait_for_status].present?
-        client.cluster.health wait_for_status: Chewy.configuration[:wait_for_status]
+        if BackendLibrary.library == :opensearch
+          client.cluster.health wait_for_status: "yellow"
+        else
+          client.cluster.health wait_for_status: Chewy.configuration[:wait_for_status]
+        end
       end
     end
 
@@ -119,7 +126,25 @@ module Chewy
     # Be careful, if current prefix is blank, this will destroy all the indexes.
     #
     def massacre
-      Chewy.client.indices.delete(index: [Chewy.configuration[:prefix], '*'].reject(&:blank?).join('_'))
+      # FIXME This is due to the SSL situation
+      # FIXME Does not work with OpenSearch ATM, generates security error, and marks a security index as yellow, for now delete that sec index
+      if BackendLibrary.library == :opensearch
+        indexes_to_delete = [Chewy.configuration[:prefix], '*'].reject(&:blank?).join('_')
+
+        if indexes_to_delete != '*'
+          Chewy.client.indices.delete(index: indexes_to_delete)
+        else
+          # Find all indices and delete them, * is not working on OpenSearch
+          index_names = Chewy.client.indices.get(index: '*').keys
+          index_names.each do |index_name|
+            Chewy.client.indices.delete(index: index_name) unless index_name.start_with?(".", "security-auditlog")
+          end
+        end
+
+      else
+        Chewy.client.indices.delete(index: [Chewy.configuration[:prefix], '*'].reject(&:blank?).join('_'))
+      end
+
       Chewy.wait_for_status
     end
     alias_method :delete_all, :massacre

@@ -32,7 +32,7 @@ module Chewy
         #
         def create(*args, **kwargs)
           create!(*args, **kwargs)
-        rescue Elasticsearch::Transport::Transport::Errors::BadRequest
+        rescue ::BackendLibrary.transport_error_bad_request
           false
         end
 
@@ -83,9 +83,8 @@ module Chewy
           result = client.indices.delete index: index_names.join(',')
           Chewy.wait_for_status if result
           result
-          # es-ruby >= 1.0.10 handles Elasticsearch::Transport::Transport::Errors::NotFound
-          # by itself, rescue is for previous versions
-        rescue Elasticsearch::Transport::Transport::Errors::NotFound
+          # es-ruby >= 1.0.10 handles Elasticsearch::Transport::Transport::Errors::NotFound by itself, rescue is for previous versions
+        rescue BackendLibrary.transport_error_not_found
           false
         end
 
@@ -99,9 +98,8 @@ module Chewy
         #   UsersIndex.delete '01-2014' # deletes `users_01-2014` index
         #
         def delete!(suffix = nil)
-          # es-ruby >= 1.0.10 handles Elasticsearch::Transport::Transport::Errors::NotFound
-          # by itself, so it is raised here
-          delete(suffix) or raise Elasticsearch::Transport::Transport::Errors::NotFound
+          # es-ruby >= 1.0.10 handles Elasticsearch::Transport::Transport::Errors::NotFound by itself, so it is raised here
+          delete(suffix) or raise BackendLibrary.transport_error_not_found
         end
 
         # Deletes and recreates index. Supports suffixes.

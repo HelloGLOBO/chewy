@@ -48,7 +48,19 @@ module Chewy
       extend Helpers
 
       module ActiveRecordMethods
-        ruby2_keywords def update_index(type_name, *args, &block)
+        # FIXME ruby2_keywords issue
+        # ruby2_keywords def update_index(type_name, *args, &block)
+        #   callback_options = Observe.extract_callback_options!(args)
+        #   update_proc = Observe.update_proc(type_name, *args, &block)
+        #
+        #   if Chewy.use_after_commit_callbacks
+        #     after_commit(**callback_options, &update_proc)
+        #   else
+        #     after_save(**callback_options, &update_proc)
+        #     after_destroy(**callback_options, &update_proc)
+        #   end
+        # end
+        def update_index(type_name, *args, &block)
           callback_options = Observe.extract_callback_options!(args)
           update_proc = Observe.update_proc(type_name, *args, &block)
 
